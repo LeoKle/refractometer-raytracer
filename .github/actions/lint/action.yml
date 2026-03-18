@@ -1,15 +1,22 @@
-name: clang-format check
-description: Checks formatting using clang-format
+name: clang-tidy check
+description: Static analysis using clang-tidy
+
+inputs:
+  source-dir:
+    description: 'Root directory of the cpp project'
+    required: false
+    default: '.'
 
 runs:
   using: composite
   steps:
-    - name: Install clang-format
+    - name: Install clang-tidy
       shell: bash
-      run: sudo apt-get install -y clang-format
+      run: sudo apt-get install -y clang-tidy
 
-    - name: Run clang-format
+    - name: Run clang-tidy
       shell: bash
       run: |
-        find src tests -name '*.cpp' -o -name '*.h' | \
-        xargs clang-format --dry-run --Werror
+        find ${{ inputs.source-dir }}/src ${{ inputs.source-dir }}/tests \
+          -name '*.cpp' | \
+        xargs clang-tidy -p build/

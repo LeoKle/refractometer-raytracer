@@ -7,17 +7,17 @@ on:
     branches: main
 
 jobs:
-  lint:
+  format:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Check formatting
-        uses: ./.github/actions/lint
+        uses: ./.github/actions/format
 
   build:
-    needs: lint
+    needs: format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,8 +37,26 @@ jobs:
           name: build
           path: build/
 
-  unit-tests:
+  lint:
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build/
+
+      - name: Run static lint
+        uses: ./.github/actions/lint
+
+  unit-tests:
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
