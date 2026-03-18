@@ -1,0 +1,23 @@
+name: Run CTEST
+description: Run CTEST with optional label filter
+
+
+inputs:
+  label:
+    description: 'Test label to filter by (e.g. unit, integration)'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+   - name: Run tests
+     shell: bash
+     run: |
+       if [ -n "${{ inputs.label }}" ]; then
+          echo "Running ${{ inputs.label }} tests"
+          ctest --test-dir build --output-on-failure -L "${{ inputs.label }}"
+        else
+          echo "Running tests"
+          ctest --test-dir build --output-on-failure
+        fi
