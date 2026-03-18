@@ -37,6 +37,16 @@ jobs:
           name: build
           path: build/
 
+  lint:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run static lint
+        uses: ./.github/actions/lint
+
   unit-tests:
     needs: build
     runs-on: ubuntu-latest
