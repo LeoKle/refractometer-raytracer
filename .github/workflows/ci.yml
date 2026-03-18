@@ -44,6 +44,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build/
+
       - name: Run static lint
         uses: ./.github/actions/lint
 
