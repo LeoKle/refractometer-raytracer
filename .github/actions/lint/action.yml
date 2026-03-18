@@ -1,0 +1,16 @@
+name: clang-tidy check
+description: Static analysis using clang-tidy
+
+runs:
+  using: composite
+  steps:
+    - name: Install clang-tidy
+      shell: bash
+      run: sudo apt-get install -y clang-tidy
+
+    - name: Run clang-tidy
+      shell: bash
+      run: |
+        find ${{ inputs.source-dir }}/src ${{ inputs.source-dir }}/tests \
+          -name '*.cpp' | \
+        xargs clang-tidy -p build/
