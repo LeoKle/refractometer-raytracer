@@ -11,16 +11,25 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(external/CMakeLists.txt)
+add_subdirectory(external)
 
-set(RAYTRACER_SOURCE
-src/main.cpp
+set(RAYTRACER_SOURCES
+    src/main.cpp
 )
 
-# set(RAYTRACER_SOURCE_HEADERS
-# )
-
-add_executable(raytracer)
-target_sources(raytracer PRIVATE
-    ${RAYTRACER_SOURCE}
+set(RAYTRACER_HEADERS
 )
+
+add_library(${PROJECT_NAME}_lib STATIC
+    ${RAYTRACER_SOURCES}
+    ${RAYTRACER_HEADERS}
+)
+
+add_executable(${PROJECT_NAME}
+    src/main.cpp
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_lib)
+
+enable_testing()
+add_subdirectory(tests)
