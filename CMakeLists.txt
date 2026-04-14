@@ -19,6 +19,11 @@ set(RAYTRACER_SOURCES
 )
 
 set(RAYTRACER_HEADERS
+    src/vecmath/Bounds3.h
+    src/vecmath/Point2.h
+    src/vecmath/Point3.h
+    src/vecmath/Vector2.h
+    src/vecmath/Vector3.h
 )
 
 add_library(${PROJECT_NAME}_lib STATIC

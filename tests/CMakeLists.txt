@@ -1,5 +1,10 @@
 # Unit tests
 ADD_EXECUTABLE(unit_tests
+    vecmath/test_Bounds3.cpp
+    vecmath/test_Point2.cpp
+    vecmath/test_Point3.cpp
+    vecmath/test_Vector2.cpp
+    vecmath/test_Vector3.cpp
     test_main.cpp
 )
 TARGET_LINK_LIBRARIES(unit_tests PRIVATE
