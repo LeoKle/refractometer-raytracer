@@ -31,6 +31,8 @@ add_library(${PROJECT_NAME}_lib STATIC
     ${RAYTRACER_HEADERS}
 )
 
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC OpenQMC::OpenQMC)
+
 add_executable(${PROJECT_NAME}
     src/main.cpp
 )

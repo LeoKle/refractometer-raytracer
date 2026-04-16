@@ -1,3 +1,6 @@
 [submodule "external/googletest"]
 	path = external/googletest
 	url = https://github.com/google/googletest.git
+[submodule "external/openqmc"]
+	path = external/openqmc
+	url = https://github.com/AcademySoftwareFoundation/openqmc.git
