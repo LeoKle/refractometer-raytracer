@@ -8,5 +8,5 @@ class ILightSource {
 public:
     virtual ~ILightSource() = default;
     virtual Vector3f samplePoint() = 0;
-    virtual const Spectrum& spectrum() const = 0;
+    [[nodiscard]] virtual const Spectrum& spectrum() const = 0;
 };
