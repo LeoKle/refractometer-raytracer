@@ -1,0 +1,53 @@
+classDiagram
+    %% <|--	Inheritance
+    %% *--	Composition
+    %% o--	Aggregation
+    %% -->	Association
+    %% --	Link (Solid)
+    %% ..>	Dependency
+    %% ..|>	Realization
+    %% ..	Link (Dashed)
+
+    class Integrator {
+        render()
+    }
+    Integrator o-- ILightSource
+    Integrator o-- ISampler
+    Integrator o-- IShape
+    Integrator o-- IDetector
+
+
+    class ILightSource {
+        sample() Point3, Lambda, Intensity
+    }
+
+    class SlitLight
+    ILightSource <|.. SlitLight
+
+    class ISampler {
+        next1D() float
+        next2D() std::array<float, 2>
+        split(DomainKey key) ISampler
+        clone() ISampler
+    }
+
+    class IShape {
+        intersect() optional<Point3, Normal3>
+        sample(ISampler) Point3
+    }
+
+    class Prism
+    IShape <|.. Prism
+
+    class  IMaterial {
+        indexOfRefraction(float lambda) float
+    }
+    Prism --> IMaterial
+
+    class SellmeierMaterial
+    IMaterial <|.. SellmeierMaterial
+
+    class IDetector {
+        intersect() optional<Point3, Normal3>
+        AddSample(Point3, intensity)
+    }
