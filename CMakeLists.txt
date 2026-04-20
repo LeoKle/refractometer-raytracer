@@ -19,6 +19,9 @@ set(RAYTRACER_SOURCES
 )
 
 set(RAYTRACER_HEADERS
+    src/sampler/ISampler.h
+    src/sampler/Sampler.h
+
     src/vecmath/Bounds3.h
     src/vecmath/Point2.h
     src/vecmath/Point3.h
@@ -35,6 +38,7 @@ add_library(${PROJECT_NAME}_lib STATIC
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC OpenQMC::OpenQMC)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp

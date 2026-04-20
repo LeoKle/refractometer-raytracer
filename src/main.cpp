@@ -1,7 +1,8 @@
-#include <oqmc/pmjbn.h>
-
 #include <iostream>
 #include <vector>
+
+#include "sampler/ISampler.h"
+#include "sampler/Sampler.h"
 
 int main() {
     std::cout << "Hello, Raytracer!\n";
@@ -13,8 +14,7 @@ int main() {
     std::vector<float> image(resolution * resolution, 0.0f);
 
     // Initialise the sampler cache
-    std::vector<char> cache(oqmc::PmjBnSampler::cacheSize);
-    oqmc::PmjBnSampler::initialiseCache(cache.data());
+    auto cache = OqmcPmjBnSampler::createCache();
 
     // Loop over all pixels
     for (int y = 0; y < resolution; ++y) {
@@ -23,10 +23,14 @@ int main() {
 
             // Loop over samples
             for (int index = 0; index < nSamples; ++index) {
-                oqmc::PmjBnSampler sampler(x, y, 0, index, cache.data());
+                // root domain (per pixel + sample)
+                OqmcPmjBnSampler pixelSampler(x, y, 0, index, cache);
 
-                float sample[2];
-                sampler.drawSample<2>(sample);
+                // create a subdomain for pixel sampling
+                auto sampleDomain = pixelSampler.split(ISampler::DomainKey::Light);
+
+                // Draw sample (2D)
+                auto sample = sampleDomain->next2D();
 
                 float xOffset = x + sample[0];
                 float yOffset = y + sample[1];

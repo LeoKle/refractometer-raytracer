@@ -1,5 +1,6 @@
 # Unit tests
 ADD_EXECUTABLE(unit_tests
+    sampler/test_sampler.cpp
     vecmath/test_Bounds3.cpp
     vecmath/test_Point2.cpp
     vecmath/test_Point3.cpp
