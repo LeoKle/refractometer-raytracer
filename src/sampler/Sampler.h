@@ -34,6 +34,12 @@ public:
         return {v[0], v[1]};
     }
 
+    std::array<float, 3> next3D() override {
+        float v[3];
+        m_domain.drawSample<3>(v);
+        return {v[0], v[1], v[2]};
+    }
+
     std::unique_ptr<ISampler> split(DomainKey key) override {
         auto child = m_domain.newDomain(static_cast<uint32_t>(key));
         return std::unique_ptr<OqmcPmjBnSampler>(new OqmcPmjBnSampler(child, m_sharedCache));

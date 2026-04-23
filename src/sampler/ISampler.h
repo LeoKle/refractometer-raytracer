@@ -12,6 +12,7 @@ public:
 
     virtual float next1D() = 0;
     virtual std::array<float, 2> next2D() = 0;
+    virtual std::array<float, 3> next3D() = 0;
 
     virtual std::unique_ptr<ISampler> split(DomainKey key) = 0;
     virtual std::unique_ptr<ISampler> clone() = 0;
