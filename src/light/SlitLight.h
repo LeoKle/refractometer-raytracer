@@ -1,9 +1,7 @@
-#pragma once
+#ifndef SLITLIGHT_H
+#define SLITLIGHT_H
 
 #include "ILightSource.h"
-
-#include <random>
-
 
 /// Geometry is defined by three corner points in world space (mm):
 ///
@@ -30,7 +28,7 @@ public:
         Spectrum spectrum
     );
 
-    Vector3f samplePoint() override;
+    Vector3f samplePoint(ISampler& sampler) override;
 
     const Spectrum& spectrum() const override;
 
@@ -48,6 +46,6 @@ private:
 
     Spectrum m_spectrum;
 
-    std::mt19937 m_rng;
-    std::uniform_real_distribution<float> m_dist{ 0.0f, 1.0f };
 };
+
+#endif

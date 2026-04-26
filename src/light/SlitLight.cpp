@@ -25,12 +25,12 @@ SlitLight::SlitLight(
     ,m_edgeU{edgeU}
     ,m_edgeV{edgeV}
     ,m_spectrum{std::move(spectrum)}
-    ,m_rng{std::random_device{}()}
 {}
 
-Vector3f SlitLight::samplePoint() {
-    const float u = m_dist(m_rng);
-    const float v = m_dist(m_rng);
+Vector3f SlitLight::samplePoint(ISampler& sampler) {
+    const auto sample = sampler.next2D();
+    const float u = sample[0];
+    const float v = sample[1];
     return m_origin + u * m_edgeU + v * m_edgeV;
 }
 
