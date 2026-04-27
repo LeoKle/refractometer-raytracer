@@ -30,6 +30,9 @@ set(RAYTRACER_HEADERS
 
     src/light/ILightSource.h
     src/light/Spectrum.h
+
+    src/detector/IDetector.h
+    src/detector/PinHoleDetector.h
 )
 
 add_library(${PROJECT_NAME}_lib STATIC
