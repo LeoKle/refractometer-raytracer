@@ -15,7 +15,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(external)
 
 set(RAYTRACER_SOURCES
-    src/main.cpp
+    src/light/SlitLight.cpp
+    src/detector/PinHoleDetector.cpp
 )
 
 set(RAYTRACER_HEADERS
@@ -28,7 +29,11 @@ set(RAYTRACER_HEADERS
     src/vecmath/Vector2.h
     src/vecmath/Vector3.h
 
+    src/shape/IShape.h
+    src/shape/Prism.h
+
     src/light/ILightSource.h
+    src/light/SlitLight.h
     src/light/Spectrum.h
 
     src/detector/IDetector.h

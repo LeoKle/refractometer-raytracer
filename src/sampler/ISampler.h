@@ -6,7 +6,7 @@
 
 class ISampler {
 public:
-    enum class DomainKey { Light, Wavelength, Shape };
+    enum class DomainKey { Light, Wavelength, Shape, Detector };
 
     virtual ~ISampler() = default;
 
