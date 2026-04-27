@@ -15,6 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(external)
 
 set(RAYTRACER_SOURCES
+    src/light/SlitLight.cpp
     src/main.cpp
 )
 
@@ -29,6 +30,7 @@ set(RAYTRACER_HEADERS
     src/vecmath/Vector3.h
 
     src/light/ILightSource.h
+    src/light/SlitLight.h
     src/light/Spectrum.h
 )
 

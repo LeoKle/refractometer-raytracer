@@ -1,10 +1,11 @@
-#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
+#include "light/SlitLight.h"
 #include "sampler/ISampler.h"
 #include "sampler/Sampler.h"
+#include "sampler/SpectrumSampler.h"
 #include "shape/Prism.h"
 
 int main() {
@@ -12,9 +13,11 @@ int main() {
 
     std::ofstream prismSamples("prismSamples.csv");
     prismSamples << "x,y,z\n";
+    std::ofstream lightSamples("lightSamples.csv");
+    lightSamples << "x,y,z\n";
 
-    int resolution = 512;
-    int nSamples = 64;
+    int resolution = 32;
+    int nSamples = 16;
 
     // Image buffer (grayscale)
     std::vector<float> image(resolution * resolution, 0.0f);
@@ -22,7 +25,12 @@ int main() {
     // Initialise the sampler cache
     auto cache = OqmcPmjBnSampler::createCache();
 
+    auto light =
+        SlitLight::from(Vector3f(0.f, 0.f, 0.f), Vector3f(0.f, 1.f, 0.f), Vector3f(0.f, 0.f, 1.f), DebugSpectrum);
     Prism prism(Point3f(0.f, 0.f, 0.f), Point3f(1.f, 0.f, 0.f), Point3f(0.5f, 1.f, 0.f), 2.f);
+
+    const auto spectrum = light.spectrum();
+    const auto spectrumSampler = SpectrumSampler(spectrum);
 
     // Loop over all pixels
     for (int y = 0; y < resolution; ++y) {
@@ -31,30 +39,24 @@ int main() {
 
             // Loop over samples
             for (int index = 0; index < nSamples; ++index) {
-                auto start = std::chrono::high_resolution_clock::now();
                 // root domain (per pixel + sample)
                 OqmcPmjBnSampler baseSampler(x, y, 0, index, cache);
                 auto shapeSampler = baseSampler.split(ISampler::DomainKey::Shape);
                 auto lightSampler = baseSampler.split(ISampler::DomainKey::Light);
+                auto wavelengthSampler = baseSampler.split(ISampler::DomainKey::Wavelength);
 
                 // sample points on the shape
                 const auto prismPoint = prism.sample(*shapeSampler);
                 // std::cout << prismPoint[0] << "," << prismPoint[1] << "," << prismPoint[2] << "\n";
                 // prismSamples << prismPoint[0] << "," << prismPoint[1] << "," << prismPoint[2] << "\n";
 
-                // Draw sample (2D)
-                auto sample = lightSampler->next2D();
+                const auto lightPoint = light.samplePoint(*lightSampler);
+                // std::cout << lightPoint[0] << "," << lightPoint[1] << "," << lightPoint[2] << "\n";
+                // lightSamples << lightPoint[0] << "," << lightPoint[1] << "," << lightPoint[2] << "\n";
 
-                float xOffset = x + sample[0];
-                float yOffset = y + sample[1];
-
-                // simple test: circle centered at origin
-                if (xOffset * xOffset + yOffset * yOffset < resolution * resolution) {
-                    pixelValue += 1.0f;
-                }
-                auto end = std::chrono::high_resolution_clock::now();
-                auto total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                std::cout << "time per sample: " << total_ns << " ns" << "\n";
+                float u = wavelengthSampler->next1D();
+                const float lambda = spectrumSampler.sample(u);
+                // float emission = spectrum.evaluate(lambda);
             }
 
             // normalize

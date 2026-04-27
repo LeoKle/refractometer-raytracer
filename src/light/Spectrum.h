@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../vecmath/Vector2.h"
 #include <vector>
+
+#include "../vecmath/Vector2.h"
 
 /// samples[i].x = wavelength in nm
 /// samples[i].y = spectral irradiance in W/(m^2*nm)
