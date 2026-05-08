@@ -8,46 +8,72 @@ classDiagram
     %% ..|>	Realization
     %% ..	Link (Dashed)
 
-    class Integrator {
-        render()
-    }
-    Integrator o-- ILightSource
-    Integrator o-- ISampler
-    Integrator o-- IShape
-    Integrator o-- IDetector
+    %% class Integrator {
+    %%     render()
+    %% }
+    %% Integrator o-- ILightSource
+    %% Integrator o-- ISampler
+    %% Integrator o-- IShape
+    %% Integrator o-- IDetector
 
 
     class ILightSource {
-        sample() Point3, Lambda, Intensity
+        getIntensity(directionVectorLight, originVectorLight, lambda)
     }
 
     class SlitLight
     ILightSource <|.. SlitLight
 
-    class ISampler {
-        next1D() float
-        next2D() std::array<float, 2>
-        split(DomainKey key) ISampler
-        clone() ISampler
-    }
+    %% class ISampler {
+    %%     next1D() float
+    %%     next2D() std::array<float, 2>
+    %%     split(DomainKey key) ISampler
+    %%     clone() ISampler
+    %% }
 
     class IShape {
-        intersect() optional<Point3, Normal3>
-        sample(ISampler) Point3
+        Shape(Medium medium)
+        intersect() optional Point3, Normal3
+        getMedium() Medium
     }
 
     class Prism
     IShape <|.. Prism
 
-    class  IMaterial {
+    class  Medium {
         indexOfRefraction(float lambda) float
     }
-    Prism --> IMaterial
+    Prism ..> Medium
 
-    class SellmeierMaterial
-    IMaterial <|.. SellmeierMaterial
+    %% class SellmeierMaterial
+    %% IMaterial <|.. SellmeierMaterial
 
-    class IDetector {
-        intersect() optional<Point3, Normal3>
-        AddSample(Point3, intensity)
+    %% class IDetector {
+    %%     intersect() optional<Point3, Normal3>
+    %%     AddSample(Point3, intensity)
+    %% }
+
+    class Medium {
+        getAbsorptionCoefficient(x_meters)
+    }
+
+    class Ray {
+        Vector3f direction
+        Point3f origin
+        
+        float wavelength
+        float intensity
+
+        Medium medium
+    }
+    Ray ..> Medium
+
+    class Camera {
+        Camera(Film film)
+        generateRay() std::optional CameraRay
+    }
+    Camera ..> Film
+
+    class Film {
+        addSample()
     }
