@@ -37,3 +37,15 @@ Vector3f SlitLight::samplePoint(ISampler& sampler) {
 const Spectrum& SlitLight::spectrum() const {
     return m_spectrum;
 }
+
+const Vector3f& SlitLight::origin() const {
+    return m_origin;
+}
+
+const Vector3f& SlitLight::edgeU() const {
+    return m_edgeU;
+}
+
+const Vector3f& SlitLight::edgeV() const {
+    return m_edgeV;
+}

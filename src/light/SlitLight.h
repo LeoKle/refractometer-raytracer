@@ -32,6 +32,10 @@ public:
 
     const Spectrum& spectrum() const override;
 
+    [[nodiscard]] const Vector3f& origin() const;
+    [[nodiscard]] const Vector3f& edgeU() const;
+    [[nodiscard]] const Vector3f& edgeV() const;
+
 private:
     SlitLight(
         Vector3f origin,
