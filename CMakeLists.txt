@@ -16,6 +16,7 @@ add_subdirectory(external)
 
 set(RAYTRACER_SOURCES
     src/light/SlitLight.cpp
+    src/light/SlitDiffractionField.cpp
     src/detector/PinHoleDetector.cpp
 )
 
@@ -34,6 +35,7 @@ set(RAYTRACER_HEADERS
 
     src/light/ILightSource.h
     src/light/SlitLight.h
+    src/light/SlitDiffractionField.h
     src/light/Spectrum.h
 
     src/detector/IDetector.h
