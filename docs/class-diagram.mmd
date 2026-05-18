@@ -32,12 +32,13 @@ classDiagram
     %% }
 
     class IShape {
-        Shape(Medium medium)
         intersect() optional Point3, Normal3
-        getMedium() Medium
+        getMedium(Point3f) Medium
     }
 
-    class Prism
+    class Prism {
+        Prism(Medium medium)
+    }
     IShape <|.. Prism
 
     class  Medium {
