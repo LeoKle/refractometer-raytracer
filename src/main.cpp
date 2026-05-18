@@ -3,20 +3,16 @@
 #include <iostream>
 #include <vector>
 
+#include "detector/PinHoleDetector.h"
+#include "light/SlitLight.h"
+#include "light/Spectrum.h"
 #include "sampler/ISampler.h"
 #include "sampler/Sampler.h"
 #include "shape/Prism.h"
-
-#include "light/SlitLight.h"
-#include "light/Spectrum.h"
-
-#include "detector/PinHoleDetector.h"
+#include "types/Medium.h"
 
 int main() {
     std::cout << "Hello, Raytracer!\n";
-
-    std::ofstream prismSamples("prismSamples.csv");
-    prismSamples << "x,y,z\n";
 
     int resolution = 512;
     int nSamples = 64;
@@ -27,9 +23,13 @@ int main() {
     // Initialise the sampler cache
     auto cache = OqmcPmjBnSampler::createCache();
 
-    Prism prism(Point3f(0.f, 0.f, 0.f), Point3f(1.f, 0.f, 0.f), Point3f(0.5f, 1.f, 0.f), 2.f);
-    SlitLight slitLight = SlitLight::from(Vector3f(-0.5f, -0.5f, -1.0f), Vector3f( 0.5f, -0.5f, -1.0f), Vector3f(-0.5f,  0.5f, -1.0f), DebugSpectrum);
-    PinHoleDetector detector = PinHoleDetector::from(Vector3f(-0.5f, -0.5f, 1.0f), Vector3f( 0.5f, -0.5f, 1.0f), Vector3f(-0.5f,  0.5f, 1.0f), Vector3f( 0.0f,  0.0f, 0.0f), resolution, resolution);
+    SellmeierMedium prismMaterial = NBK7;
+    Prism prism(Point3f(0.f, 0.f, 0.f), Point3f(1.f, 0.f, 0.f), Point3f(0.5f, 1.f, 0.f), 2.f, prismMaterial);
+    SlitLight slitLight = SlitLight::from(Vector3f(-0.5f, -0.5f, -1.0f), Vector3f(0.5f, -0.5f, -1.0f),
+                                          Vector3f(-0.5f, 0.5f, -1.0f), DebugSpectrum);
+    PinHoleDetector detector =
+        PinHoleDetector::from(Vector3f(-0.5f, -0.5f, 1.0f), Vector3f(0.5f, -0.5f, 1.0f), Vector3f(-0.5f, 0.5f, 1.0f),
+                              Vector3f(0.0f, 0.0f, 0.0f), resolution, resolution);
 
     // Loop over all pixels
     for (int y = 0; y < resolution; ++y) {
@@ -41,49 +41,32 @@ int main() {
                 auto start = std::chrono::high_resolution_clock::now();
                 // root domain (per pixel + sample)
                 OqmcPmjBnSampler baseSampler(x, y, 0, index, cache);
-                auto shapeSampler = baseSampler.split(ISampler::DomainKey::Shape);
-                auto lightSampler = baseSampler.split(ISampler::DomainKey::Light);
                 auto detectorSampler = baseSampler.split(ISampler::DomainKey::Detector);
 
-                // sample points on the shape
-                const auto prismPoint = prism.sample(*shapeSampler);
-                // std::cout << prismPoint[0] << "," << prismPoint[1] << "," << prismPoint[2] << "\n";
-                // prismSamples << prismPoint[0] << "," << prismPoint[1] << "," << prismPoint[2] << "\n";
-                const auto lightPoint = slitLight.samplePoint(*lightSampler);
                 const auto ray = detector.sampleRay(x, y, *detectorSampler);
 
-                // Draw sample (2D)
-                auto sample = lightSampler->next2D();
+                //  shape intersection
+                const auto rayOrigin = Point3f(
+                    {ray.origin.x, ray.origin.y, ray.origin.z});  // FIXME: explicit conversion Vector3 to Point3
+                const auto intersection = prism.intersect(rayOrigin, ray.direction);
 
-                float xOffset = x + sample[0];
-                float yOffset = y + sample[1];
+                if (!intersection.has_value()) {
+                    break;
+                }
+                const auto intersection_point = intersection.value().point;
+                const auto intersection_normal = intersection.value().normal;
 
-                ///More complex E2E test than the circle
+                // More complex E2E test than the circle
                 if (x == 0 && y == 0 && index == 0) {
-                    std::cout << "First prism sample: "
-                              << prismPoint.x << ", "
-                              << prismPoint.y << ", "
-                              << prismPoint.z << "\n";
-
-                    std::cout << "First light sample: "
-                              << lightPoint.x << ", "
-                              << lightPoint.y << ", "
-                              << lightPoint.z << "\n";
-
-                    std::cout << "First detector ray origin: "
-                              << ray.origin.x << ", "
-                              << ray.origin.y << ", "
+                    std::cout << "First detector ray origin: " << ray.origin.x << ", " << ray.origin.y << ", "
                               << ray.origin.z << "\n";
 
-                    std::cout << "First detector ray direction: "
-                              << ray.direction.x << ", "
-                              << ray.direction.y << ", "
+                    std::cout << "First detector ray direction: " << ray.direction.x << ", " << ray.direction.y << ", "
                               << ray.direction.z << "\n";
-                }
 
-                prismSamples << prismPoint.x << ","
-                             << prismPoint.y << ","
-                             << prismPoint.z << "\n";
+                    std::cout << "First shape intersetion: " << intersection_point.x << ", " << intersection_point.y
+                              << ", " << intersection_point.z << "\n";
+                }
 
                 if (ray.direction.z > 0.0f) {
                     pixelValue += 1.0f;
@@ -91,7 +74,7 @@ int main() {
 
                 auto end = std::chrono::high_resolution_clock::now();
                 auto total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                std::cout << "time per sample: " << total_ns << " ns" << "\n";
+                // std::cout << "time per sample: " << total_ns << " ns" << "\n";
             }
 
             // normalize
