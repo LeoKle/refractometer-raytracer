@@ -2,6 +2,7 @@
 ADD_EXECUTABLE(unit_tests
     light/test_SlitDiffractionField.cpp
     sampler/test_sampler.cpp
+    shape/test_prism.cpp
     vecmath/test_Bounds3.cpp
     vecmath/test_Point2.cpp
     vecmath/test_Point3.cpp
