@@ -27,6 +27,9 @@ int main() {
     Prism prism(Point3f(0.f, 0.f, 0.f), Point3f(1.f, 0.f, 0.f), Point3f(0.5f, 1.f, 0.f), 2.f, prismMaterial);
     SlitLight slitLight = SlitLight::from(Vector3f(-0.5f, -0.5f, -1.0f), Vector3f(0.5f, -0.5f, -1.0f),
                                           Vector3f(-0.5f, 0.5f, -1.0f), DebugSpectrum);
+    const Vector2f firstSpectrumSample = slitLight.spectrum().samples.empty()
+                                             ? Vector2f{0.0f, 0.0f}
+                                             : slitLight.spectrum().samples.front();
     PinHoleDetector detector =
         PinHoleDetector::from(Vector3f(-0.5f, -0.5f, 1.0f), Vector3f(0.5f, -0.5f, 1.0f), Vector3f(-0.5f, 0.5f, 1.0f),
                               Vector3f(0.0f, 0.0f, 0.0f), resolution, resolution);
@@ -69,7 +72,12 @@ int main() {
                 }
 
                 if (ray.direction.z > 0.0f) {
-                    pixelValue += 1.0f;
+                    const float interferenceWeight = slitLight.interferenceWeight(
+                        {intersection_point.x, intersection_point.y, intersection_point.z},
+                        ray.direction,
+                        firstSpectrumSample.x
+                    );
+                    pixelValue += firstSpectrumSample.y * interferenceWeight;
                 }
 
                 auto end = std::chrono::high_resolution_clock::now();
