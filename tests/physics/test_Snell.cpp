@@ -13,156 +13,162 @@ static void ExpectVec3Near(const Vector3f &got, const Vector3f &want, float eps 
     EXPECT_NEAR(got.z, want.z, eps) << "z mismatch";
 }
 
-// Verify a vector has unit length within tolerance
 static void ExpectUnit(const Vector3f &v, float eps = kEps) {
     EXPECT_NEAR(v.length(), 1.0f, eps) << "result is not a unit vector";
 }
 
-// 1. Normal incidence  (r0 parallel to n) -> refracted ray == incident ray
-//    Angle of incidence = 0, so no bending regardless of n1/n2.
+// Helper: outward normal always opposes the incident ray
+// i.e. dot(n, r0) < 0
+static Vector3f outward(Vector3f n) { return -n; }
+
+// 1. Normal incidence -> refracted ray == incident ray
 TEST(SnellLaw, NormalIncidence_NoDeflection) {
-    Vector3f n = {0, 0, 1};   // surface normal (pointing into medium 2)
-    Vector3f r0 = {0, 0, 1};  // ray straight along normal
-    Vector3f r1 = SnellLaw(1.0f, 1.5f, r0, n);
-    ExpectVec3Near(r1, r0);
+    Vector3f r0 = {0, 0, 1};
+    Vector3f n = outward({0, 0, 1});  // {0, 0, -1}
+    auto r1 = SnellLaw(1.0f, 1.5f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    ExpectVec3Near(*r1, r0);
 }
 
 // 2. Same medium (n1 == n2) -> direction unchanged
 TEST(SnellLaw, SameMedium_DirectionUnchanged) {
-    Vector3f n = {0, 1, 0};
-    Vector3f r0 = {0.6f, 0.8f, 0.0f};  // some unit vector
-    Vector3f r1 = SnellLaw(1.3f, 1.3f, r0, n);
-    ExpectVec3Near(r1, r0);
+    Vector3f r0 = {0.6f, 0.8f, 0.0f};
+    Vector3f n = outward({0, 1, 0});  // {0, -1, 0}
+    auto r1 = SnellLaw(1.3f, 1.3f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    ExpectVec3Near(*r1, r0);
 }
 
-// 3. Result must always be a unit vector (energy conservation)
+// 3. Result must always be a unit vector
 TEST(SnellLaw, ResultIsUnitVector_AirToGlass) {
-    Vector3f n = {0, 0, 1};
-    // 30° incidence in air -> glass (n=1.5)
     float angle = 30.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
-    Vector3f r1 = SnellLaw(1.0f, 1.5f, r0, n);
-    ExpectUnit(r1);
+    Vector3f n = outward({0, 0, 1});
+    auto r1 = SnellLaw(1.0f, 1.5f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    ExpectUnit(*r1);
 }
 
 TEST(SnellLaw, ResultIsUnitVector_GlassToAir) {
-    Vector3f n = {0, 0, 1};
     float angle = 20.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
-    Vector3f r1 = SnellLaw(1.5f, 1.0f, r0, n);
-    ExpectUnit(r1);
+    Vector3f n = outward({0, 0, 1});
+    auto r1 = SnellLaw(1.5f, 1.0f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    ExpectUnit(*r1);
 }
 
-// 4. Snell's law:  n1 * sin(θ1) = n2 * sin(θ2)
-//    sin(θ) = length of transverse component (component perpendicular to n)
+// 4. Snell's law: n1 * sin(θ1) = n2 * sin(θ2)
 TEST(SnellLaw, SnellRatioSatisfied_AirToGlass) {
     const float n1 = 1.0f, n2 = 1.5f;
-    Vector3f n = {0, 0, 1};
     float angle = 45.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
+    Vector3f n = outward({0, 0, 1});
 
-    Vector3f r1 = SnellLaw(n1, n2, r0, n);
+    auto r1 = SnellLaw(n1, n2, r0, n);
+    ASSERT_TRUE(r1.has_value());
 
-    float sinTheta1 = std::sqrt(r0.x * r0.x + r0.y * r0.y);  // transverse of r0
-    float sinTheta2 = std::sqrt(r1.x * r1.x + r1.y * r1.y);  // transverse of r1
-
+    float sinTheta1 = std::sqrt(r0.x * r0.x + r0.y * r0.y);
+    float sinTheta2 = std::sqrt(r1->x * r1->x + r1->y * r1->y);
     EXPECT_NEAR(n1 * sinTheta1, n2 * sinTheta2, kEps);
 }
 
 TEST(SnellLaw, SnellRatioSatisfied_GlassToWater) {
     const float n1 = 1.5f, n2 = 1.33f;
-    Vector3f n = {0, 1, 0};
     float angle = 25.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), std::cos(angle), 0.0f};
+    Vector3f n = outward({0, 1, 0});
 
-    Vector3f r1 = SnellLaw(n1, n2, r0, n);
+    auto r1 = SnellLaw(n1, n2, r0, n);
+    ASSERT_TRUE(r1.has_value());
 
     float sinTheta1 = std::sqrt(r0.x * r0.x + r0.z * r0.z);
-    float sinTheta2 = std::sqrt(r1.x * r1.x + r1.z * r1.z);
-
+    float sinTheta2 = std::sqrt(r1->x * r1->x + r1->z * r1->z);
     EXPECT_NEAR(n1 * sinTheta1, n2 * sinTheta2, kEps);
 }
 
-// 5. Refracted ray must stay in the same half-space as the incident ray
-//    (n · r1 > 0 when n · r0 > 0)
+// 5. Refracted ray must continue into the second medium (dot(n_outward, r1) < 0)
+//    With outward normals the refracted ray travels INTO the surface, so dot is negative.
 TEST(SnellLaw, RefractedRayInCorrectHalfSpace) {
-    Vector3f n = {0, 0, 1};
     float angle = 35.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
-    Vector3f r1 = SnellLaw(1.0f, 1.5f, r0, n);
-    EXPECT_GT(n.dot(r1), 0.0f);
+    Vector3f n = outward({0, 0, 1});  // {0, 0, -1}
+
+    auto r1 = SnellLaw(1.0f, 1.5f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    EXPECT_LT(n.dot(*r1), 0.0f);  // refracted ray goes into the surface
 }
 
-// 6. Going denser (n1 < n2) bends the ray toward the normal:
-//    transverse component shrinks  ->  sin(θ2) < sin(θ1)
+// 6. Going denser bends toward the normal: sin(θ2) < sin(θ1)
 TEST(SnellLaw, DenserMedium_BendsTowardNormal) {
-    Vector3f n = {0, 0, 1};
     float angle = 50.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
-    Vector3f r1 = SnellLaw(1.0f, 1.5f, r0, n);
+    Vector3f n = outward({0, 0, 1});
 
-    float sinTheta1 = std::abs(r0.x);
-    float sinTheta2 = std::abs(r1.x);
-    EXPECT_LT(sinTheta2, sinTheta1);
+    auto r1 = SnellLaw(1.0f, 1.5f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    EXPECT_LT(std::abs(r1->x), std::abs(r0.x));
 }
 
-// 7. Going less dense (n1 > n2) bends the ray away from the normal:
-//    transverse component grows  ->  sin(θ2) > sin(θ1)
+// 7. Going less dense bends away from the normal: sin(θ2) > sin(θ1)
 TEST(SnellLaw, LessDenseMedium_BendsAwayFromNormal) {
-    Vector3f n = {0, 0, 1};
     float angle = 20.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
-    Vector3f r1 = SnellLaw(1.5f, 1.0f, r0, n);
+    Vector3f n = outward({0, 0, 1});
 
-    float sinTheta1 = std::abs(r0.x);
-    float sinTheta2 = std::abs(r1.x);
-    EXPECT_GT(sinTheta2, sinTheta1);
+    auto r1 = SnellLaw(1.5f, 1.0f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    EXPECT_GT(std::abs(r1->x), std::abs(r0.x));
 }
 
-// 8. Exact numerical value for a known case:
-//    air->glass (n1=1, n2=1.5), θ1=30° -> θ2=arcsin(sin30/1.5)=19.471°
+// 8. Exact numerical value: air->glass, θ1=30° -> θ2=19.471°
 TEST(SnellLaw, KnownAngle_AirToGlass_30deg) {
     const float n1 = 1.0f, n2 = 1.5f;
-    Vector3f nhat = {0, 0, 1};
     float theta1 = 30.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(theta1), 0.0f, std::cos(theta1)};
+    Vector3f n = outward({0, 0, 1});
 
-    Vector3f r1 = SnellLaw(n1, n2, r0, nhat);
+    auto r1 = SnellLaw(n1, n2, r0, n);
+    ASSERT_TRUE(r1.has_value());
 
-    float theta2_expected = std::asin(n1 * std::sin(theta1) / n2);
-    EXPECT_NEAR(r1.x, std::sin(theta2_expected), kEps);
-    EXPECT_NEAR(r1.y, 0.0f, kEps);
-    EXPECT_NEAR(r1.z, std::cos(theta2_expected), kEps);
+    float theta2 = std::asin(n1 * std::sin(theta1) / n2);
+    EXPECT_NEAR(r1->x, std::sin(theta2), kEps);
+    EXPECT_NEAR(r1->y, 0.0f, kEps);
+    EXPECT_NEAR(r1->z, std::cos(theta2), kEps);
 }
 
-// 9. Non-axis-aligned normal: same physics must hold
+// 9. Non-axis-aligned normal: Snell ratio must still hold
 TEST(SnellLaw, ArbitraryNormal_SnellRatioSatisfied) {
-    const float n1 = 1.0f, n2 = 1.33f;  // air -> water
-    // Normal at 45° in the XZ plane
-    Vector3f nhat = Vector3f{1, 0, 1}.normalized();
-    // Incident ray: straight down Z (must have positive dot with normal)
+    const float n1 = 1.0f, n2 = 1.33f;
+    Vector3f nhat = -Vector3f{1, 0, 1}.normalized();  // outward, opposes r0
     Vector3f r0 = Vector3f{0, 0, 1}.normalized();
 
-    Vector3f r1 = SnellLaw(n1, n2, r0, nhat);
+    auto r1 = SnellLaw(n1, n2, r0, nhat);
+    ASSERT_TRUE(r1.has_value());
 
-    // Compute sin(θ) via cross product magnitude: |r × n̂|
-    auto cross0 = r0.cross(nhat);
-    auto cross1 = r1.cross(nhat);
-    float sinT1 = cross0.length();
-    float sinT2 = cross1.length();
-
+    float sinT1 = r0.cross(nhat).length();
+    float sinT2 = r1->cross(nhat).length();
     EXPECT_NEAR(n1 * sinT1, n2 * sinT2, 1e-4f);
-    ExpectUnit(r1, 1e-4f);
+    ExpectUnit(*r1, 1e-4f);
 }
 
-// 10. Transverse direction is preserved (the in-plane component points the same way)
+// 10. Transverse direction is preserved
 TEST(SnellLaw, TransverseDirectionPreserved) {
-    Vector3f n = {0, 0, 1};
     float angle = 40.0f * M_PI / 180.0f;
     Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
-    Vector3f r1 = SnellLaw(1.0f, 1.5f, r0, n);
-    // x-component must keep the same sign
-    EXPECT_GT(r1.x, 0.0f);
-    // y-component must stay zero (2-D geometry)
-    EXPECT_NEAR(r1.y, 0.0f, kEps);
+    Vector3f n = outward({0, 0, 1});
+
+    auto r1 = SnellLaw(1.0f, 1.5f, r0, n);
+    ASSERT_TRUE(r1.has_value());
+    EXPECT_GT(r1->x, 0.0f);
+    EXPECT_NEAR(r1->y, 0.0f, kEps);
+}
+
+// 11. Total internal reflection returns nullopt
+TEST(SnellLaw, TotalInternalReflection_ReturnsNullopt) {
+    // Critical angle for glass->air ~41.8°; use 50°
+    float angle = 50.0f * M_PI / 180.0f;
+    Vector3f r0 = {std::sin(angle), 0.0f, std::cos(angle)};
+    Vector3f n = outward({0, 0, 1});
+    EXPECT_FALSE(SnellLaw(1.5f, 1.0f, r0, n).has_value());
 }

@@ -5,15 +5,16 @@
 
 #include "vecmath/Vector3.h"
 
-inline const Vector3f SnellLaw(float n1, float n2, Vector3f r0, Vector3f n) {
-    const float n12 = n1 / n2;
-    const float ndotr0 = n.dot(r0);
+const inline std::optional<Vector3f> SnellLaw(float n1, float n2, Vector3f incident, Vector3f normal) {
+    // normal is outward-facing; cosI must be positive so negate the dot
+    const float eta = n1 / n2;
+    const float cosI = -normal.dot(incident);  // > 0 for entering ray
+    const float sin2T = eta * eta * (1.0f - cosI * cosI);
 
-    const auto term1 = n12 * r0;
-    const float term2 = n12 * ndotr0;
-    const float term3 = 1.0f - n12 * n12 * (1.0f - ndotr0 * ndotr0);
+    if (sin2T > 1.0f) return std::nullopt;  // total internal reflection
 
-    return term1 - n * (term2 - std::sqrt(term3));
-};
+    const float cosT = std::sqrt(1.0f - sin2T);
+    return eta * incident + (eta * cosI - cosT) * normal;
+}
 
 #endif
