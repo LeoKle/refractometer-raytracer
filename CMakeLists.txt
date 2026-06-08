@@ -18,6 +18,7 @@ set(RAYTRACER_SOURCES
     src/light/SlitLight.cpp
     src/light/SlitDiffractionField.cpp
     src/detector/PinHoleDetector.cpp
+    src/detector/OpenApertureDetector.cpp
 )
 
 set(RAYTRACER_HEADERS
@@ -35,11 +36,11 @@ set(RAYTRACER_HEADERS
 
     src/light/ILightSource.h
     src/light/SlitLight.h
-    src/light/SlitDiffractionField.h
     src/light/Spectrum.h
 
     src/detector/IDetector.h
     src/detector/PinHoleDetector.h
+    src/detector/OpenApertureDetector.h
 )
 
 add_library(${PROJECT_NAME}_lib STATIC
