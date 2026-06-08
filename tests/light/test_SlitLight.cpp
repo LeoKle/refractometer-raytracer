@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "light/SlitLight.h"
+#include "sampler/Sampler.h"
 
 static constexpr float kEps = 1e-5f;
 
@@ -69,8 +70,11 @@ TEST(SlitLight, SamplePointStaysInsideAxisAlignedRectangle) {
         DebugSpectrum
     );
 
+    auto cache = OqmcPmjBnSampler::createCache();
+    OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
+
     for (int i = 0; i < 1000; ++i) {
-        Vector3f p = light.samplePoint();
+        Vector3f p = light.samplePoint(sampler);
 
         EXPECT_GE(p.x, 1.0f);
         EXPECT_LE(p.x, 5.0f);
@@ -90,8 +94,11 @@ TEST(SlitLight, SamplePointOnDegenerateWidthSlitKeepsXFixed) {
         DebugSpectrum
     );
 
+    auto cache = OqmcPmjBnSampler::createCache();
+    OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
+
     for (int i = 0; i < 200; ++i) {
-        Vector3f p = light.samplePoint();
+        Vector3f p = light.samplePoint(sampler);
 
         EXPECT_NEAR(p.x, 2.0f, kEps);
         EXPECT_GE(p.y, 1.0f);
@@ -108,8 +115,11 @@ TEST(SlitLight, SamplePointOnDegenerateHeightSlitKeepsYFixed) {
         DebugSpectrum
     );
 
+    auto cache = OqmcPmjBnSampler::createCache();
+    OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
+
     for (int i = 0; i < 200; ++i) {
-        Vector3f p = light.samplePoint();
+        Vector3f p = light.samplePoint(sampler);
 
         EXPECT_GE(p.x, 3.0f);
         EXPECT_LE(p.x, 8.0f);
@@ -128,8 +138,11 @@ TEST(SlitLight, CanBeUsedThroughLightSourceInterface) {
 
     ILightSource* light = &slitLight;
 
+    auto cache = OqmcPmjBnSampler::createCache();
+    OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
+
     const Spectrum& spectrum = light->spectrum();
-    Vector3f p = light->samplePoint();
+    Vector3f p = light->samplePoint(sampler);
 
     EXPECT_EQ(spectrum.samples.size(), DebugSpectrum.samples.size());
 

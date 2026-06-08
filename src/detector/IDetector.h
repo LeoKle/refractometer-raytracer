@@ -3,10 +3,12 @@
 
 #include "../sampler/ISampler.h"
 #include "../vecmath/Vector3.h"
+#include "../light/Spectrum.h"
 
 struct Ray {
     Vector3f origin;
     Vector3f direction;
+    Spectrum spectrum{{{550.0f, 1.0f}}};
 };
 
 /// BACKWARD raytracer detector interface.

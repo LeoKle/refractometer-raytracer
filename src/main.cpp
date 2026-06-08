@@ -16,11 +16,6 @@ int main() {
 
     int nSamples = 64;
 
-    OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(640, 512);
-
-    // Image buffer (grayscale)
-    std::vector<float> image(detector.width() * detector.height(), 0.0f);
-
     // Initialise the sampler cache
     auto cache = OqmcPmjBnSampler::createCache();
 
@@ -31,8 +26,13 @@ int main() {
         Vector3f(-0.5f, -0.5f, -1.0f),
         Vector3f(0.5f, -0.5f, -1.0f),
         Vector3f(-0.5f, 0.5f, -1.0f),
-        DebugSpectrum
+        HeNeSpectrum
     );
+
+    OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(slitLight, 640, 512);
+
+    // Image buffer (grayscale)
+    std::vector<float> image(detector.width() * detector.height(), 0.0f);
 
     // Loop over all pixels
     for (int y = 0; y < detector.height(); ++y) {
@@ -74,7 +74,11 @@ int main() {
                 }
 
                 if (ray.direction.z > 0.0f) {
-                    pixelValue += 1.0f;
+                    float rayIntensity = 0.0f;
+                    for (const Vector2f& sample : ray.spectrum.samples) {
+                        rayIntensity += sample.y;
+                    }
+                    pixelValue += rayIntensity;
                 }
 
                 auto end = std::chrono::high_resolution_clock::now();

@@ -2,6 +2,8 @@
 #define DETECTOR_OPENAPERTUREDETECTOR_H
 
 #include "IDetector.h"
+#include "../light/ILightSource.h"
+#include "../light/Spectrum.h"
 
 /// Bare sensor behind a circular front opening.
 ///
@@ -19,6 +21,7 @@ public:
     static constexpr int NativeHeight = 2048;
 
     static OpenApertureDetector go5000Mpmcl(
+        const ILightSource& lightSource,
         int width = NativeWidth,
         int height = NativeHeight
     );
@@ -29,7 +32,11 @@ public:
     [[nodiscard]] int height() const override;
 
 private:
-    OpenApertureDetector(int width, int height);
+    OpenApertureDetector(
+        const ILightSource& lightSource,
+        int width,
+        int height
+    );
 
     [[nodiscard]] Vector3f sampleSensorPoint(
         int x,
@@ -50,6 +57,8 @@ private:
 
     static constexpr float RayOriginEpsilonMm = 1.0e-4f;
     static constexpr float Pi = 3.14159265358979323846f;
+
+    Spectrum m_launchSpectrum;
 
     Vector3f m_sensorOrigin;
     Vector3f m_sensorEdgeU;

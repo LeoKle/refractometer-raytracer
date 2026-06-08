@@ -1,6 +1,8 @@
 # Unit tests
 ADD_EXECUTABLE(unit_tests
     light/test_SlitDiffractionField.cpp
+    light/test_SlitLight.cpp
+    light/test_Spectrum.cpp
     physics/test_Snell.cpp
     sampler/test_sampler.cpp
     shape/test_prism.cpp
@@ -9,6 +11,7 @@ ADD_EXECUTABLE(unit_tests
     vecmath/test_Point3.cpp
     vecmath/test_Vector2.cpp
     vecmath/test_Vector3.cpp
+    detector/test_DetectorQE.cpp
     test_main.cpp
 )
 TARGET_LINK_LIBRARIES(unit_tests PRIVATE

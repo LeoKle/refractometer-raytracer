@@ -1,19 +1,25 @@
 #include "OpenApertureDetector.h"
+#include "DetectorQE.h"
 
 #include <cmath>
 
 OpenApertureDetector OpenApertureDetector::go5000Mpmcl(
+    const ILightSource& lightSource,
     int width,
     int height
 ) {
-    return OpenApertureDetector(width, height);
+    return OpenApertureDetector(lightSource, width, height);
 }
 
 OpenApertureDetector::OpenApertureDetector(
+    const ILightSource& lightSource,
     int width,
     int height
 )
-    : m_sensorOrigin{
+    : m_launchSpectrum{
+          MultiplySourceSpectrumByDetectorQE(lightSource.spectrum())
+      }
+    , m_sensorOrigin{
           -0.5f * SensorWidthMm,
           -0.5f * SensorHeightMm,
           -SensorDistanceMm
@@ -72,7 +78,8 @@ Ray OpenApertureDetector::sampleRay(
     // immediately hit the aperture plane again.
     return Ray{
         pAperture + RayOriginEpsilonMm * direction,
-        direction
+        direction,
+        m_launchSpectrum
     };
 }
 
