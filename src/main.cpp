@@ -34,6 +34,8 @@ inline std::optional<Ray> refractThroughSurface(const IShape& shape, const Ray& 
     return Ray{point, refracted.value()};
 }
 
+constexpr float kRefractiveIndexAir = 1.000277f;
+
 int main() {
     std::cout << "Hello, Raytracer!\n";
 
@@ -82,16 +84,21 @@ int main() {
 
                 const auto detectorRay = detector.sampleRay(x, y, *detectorSampler);
 
+                const float wavelength = 550.f * 10e-3;  // micrometers // TODO: take wavelength from detector sample
+
                 // intersection 1: entry into prism (air -> glass)
-                const auto refracted1 = refractThroughSurface(prism, detectorRay, 1.000277f,
-                                                              1.3f);  // TODO: correct refractive index calculation
+                const auto refractive_index = prismMaterial.refractiveIndex(wavelength);
+                const auto refracted1 =
+                    refractThroughSurface(prism, detectorRay, kRefractiveIndexAir,
+                                          refractive_index);  // TODO: correct refractive index calculation
                 if (!refracted1) continue;
 
                 // std::cout << "HIT";
 
                 // intersection 2: exit from prism (glass -> air)
-                const auto refracted2 = refractThroughSurface(prism, *refracted1, 1.3f,
-                                                              1.000277f);  // TODO: correct refractive index calculation
+                const auto refracted2 =
+                    refractThroughSurface(prism, *refracted1, refractive_index,
+                                          kRefractiveIndexAir);  // TODO: correct refractive index calculation
                 if (!refracted2) continue;
 
                 // TODO: check for intersection with lightsource
