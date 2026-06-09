@@ -2,6 +2,7 @@
 #define PHYSICS_SNELL_H
 
 #include <cmath>
+#include <optional>
 
 #include "vecmath/Vector3.h"
 
