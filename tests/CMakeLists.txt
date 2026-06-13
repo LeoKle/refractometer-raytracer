@@ -1,6 +1,7 @@
 # Unit tests
 ADD_EXECUTABLE(unit_tests
     light/test_SlitLight.cpp
+    light/test_SlitLightIntersection.cpp
     light/test_Spectrum.cpp
     sampler/test_sampler.cpp
     shape/test_prism.cpp

@@ -9,6 +9,7 @@ namespace {
 constexpr float kPi = 3.14159265358979323846f;
 constexpr float kMmToM = 1.0e-3f;
 constexpr float kNmToM = 1.0e-9f;
+constexpr double kIntersectionEpsilon = 1.0e-6;
 
 bool isFiniteVector(const Vector3f& value) {
     return std::isfinite(value.x)
@@ -85,6 +86,71 @@ Vector3f SlitLight::samplePoint(ISampler& sampler) {
 
 const Spectrum& SlitLight::spectrum() const {
     return m_spectrum;
+}
+
+std::optional<LightIntersection> SlitLight::intersect(
+    const Point3f& rayOrigin,
+    const Vector3f& direction,
+    float wavelengthNm
+) const {
+    Vector3f normal;
+    if (!safeNormalized(m_edgeU.cross(m_edgeV), normal)) {
+        return std::nullopt;
+    }
+
+    const double directionDotNormal = dotAsDouble(direction, normal);
+    if (!std::isfinite(directionDotNormal)
+        || std::abs(directionDotNormal) <= kIntersectionEpsilon) {
+        return std::nullopt;
+    }
+
+    const Vector3f originToSlit{
+        m_origin.x - rayOrigin.x,
+        m_origin.y - rayOrigin.y,
+        m_origin.z - rayOrigin.z
+    };
+    const double t = dotAsDouble(originToSlit, normal) / directionDotNormal;
+    if (!std::isfinite(t) || t <= 0.0) {
+        return std::nullopt;
+    }
+
+    const Point3f point = rayOrigin + static_cast<float>(t) * direction;
+    const Vector3f pointOnSlit{
+        point.x - m_origin.x,
+        point.y - m_origin.y,
+        point.z - m_origin.z
+    };
+    if (!isFiniteVector(pointOnSlit)) {
+        return std::nullopt;
+    }
+
+    const double edgeUDotU = dotAsDouble(m_edgeU, m_edgeU);
+    const double edgeUDotV = dotAsDouble(m_edgeU, m_edgeV);
+    const double edgeVDotV = dotAsDouble(m_edgeV, m_edgeV);
+    const double pointDotU = dotAsDouble(pointOnSlit, m_edgeU);
+    const double pointDotV = dotAsDouble(pointOnSlit, m_edgeV);
+    const double determinant = edgeUDotU * edgeVDotV - edgeUDotV * edgeUDotV;
+    if (!std::isfinite(determinant) || determinant <= 0.0) {
+        return std::nullopt;
+    }
+
+    const double u = (pointDotU * edgeVDotV - pointDotV * edgeUDotV) / determinant;
+    const double v = (pointDotV * edgeUDotU - pointDotU * edgeUDotV) / determinant;
+    if (!std::isfinite(u) || !std::isfinite(v)
+        || u < -kIntersectionEpsilon || u > 1.0 + kIntersectionEpsilon
+        || v < -kIntersectionEpsilon || v > 1.0 + kIntersectionEpsilon) {
+        return std::nullopt;
+    }
+
+    return LightIntersection{
+        point,
+        normal,
+        interferenceWeight(
+            {rayOrigin.x, rayOrigin.y, rayOrigin.z},
+            direction,
+            wavelengthNm
+        )
+    };
 }
 
 float SlitLight::interferenceWeight(

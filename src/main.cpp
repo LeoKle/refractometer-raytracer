@@ -75,13 +75,15 @@ int main() {
                               << ", " << intersection_point.z << "\n";
                 }
 
-                if (ray.direction.z > 0.0f) {
-                    const float interferenceWeight = slitLight.interferenceWeight(
-                        {intersection_point.x, intersection_point.y, intersection_point.z},
+                for (const Vector2f& spectralSample : ray.spectrum.samples) {
+                    const auto lightIntersection = slitLight.intersect(
+                        intersection_point,
                         ray.direction,
-                        firstSpectrumSample.x
+                        spectralSample.x
                     );
-                    pixelValue += firstSpectrumSample.y * interferenceWeight;
+                    if (lightIntersection.has_value()) {
+                        pixelValue += spectralSample.y * lightIntersection->interferenceWeight;
+                    }
                 }
 
                 auto end = std::chrono::high_resolution_clock::now();

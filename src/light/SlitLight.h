@@ -32,6 +32,12 @@ public:
 
     const Spectrum& spectrum() const override;
 
+    [[nodiscard]] std::optional<LightIntersection> intersect(
+        const Point3f& origin,
+        const Vector3f& direction,
+        float wavelengthNm
+    ) const override;
+
     [[nodiscard]] float interferenceWeight(
         const Vector3f& prismExitPoint,
         const Vector3f& directionTowardSlit,
