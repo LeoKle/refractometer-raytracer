@@ -4,20 +4,20 @@
 #include <cmath>
 
 OpenApertureDetector OpenApertureDetector::go5000Mpmcl(
-    const ILightSource& lightSource,
+    const Spectrum& sourceSpectrum,
     int width,
     int height
 ) {
-    return OpenApertureDetector(lightSource, width, height);
+    return OpenApertureDetector(sourceSpectrum, width, height);
 }
 
 OpenApertureDetector::OpenApertureDetector(
-    const ILightSource& lightSource,
+    const Spectrum& sourceSpectrum,
     int width,
     int height
 )
     : m_launchSpectrum{
-          MultiplySourceSpectrumByDetectorQE(lightSource.spectrum())
+          MultiplySourceSpectrumByDetectorQE(sourceSpectrum)
       }
     , m_sensorOrigin{
           -0.5f * SensorWidthMm,

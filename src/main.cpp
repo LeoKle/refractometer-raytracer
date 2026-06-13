@@ -33,7 +33,7 @@ int main() {
         HeNeSpectrum
     );
 
-    OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(slitLight, 640, 512);
+    OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(slitLight.spectrum(), 640, 512);
 
     // Image buffer (grayscale)
     std::vector<float> image(detector.width() * detector.height(), 0.0f);

@@ -91,7 +91,7 @@ TEST(DetectorQETest, WeightedHeNeSpectrumHasOneSample) {
 TEST(DetectorQETest, OpenApertureDetectorRayCarriesSpectrum) {
     SlitLight light = SlitLight::from(
         Vector3f(0,0,0), Vector3f(1,0,0), Vector3f(0,1,0), HeNeSpectrum);
-    OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(light, 10, 10);
+    OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(light.spectrum(), 10, 10);
     
     auto cache = OqmcPmjBnSampler::createCache();
     OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
