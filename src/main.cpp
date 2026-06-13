@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "detector/OpenApertureDetector.h"
+#include "detector/PinHoleDetector.h"
 #include "light/SlitLight.h"
 #include "light/Spectrum.h"
 #include "sampler/ISampler.h"
@@ -14,7 +14,11 @@
 int main() {
     std::cout << "Hello, Raytracer!\n";
 
+    int resolution = 512;
     int nSamples = 64;
+
+    // Image buffer (grayscale)
+    std::vector<float> image(resolution * resolution, 0.0f);
 
     // Initialise the sampler cache
     auto cache = OqmcPmjBnSampler::createCache();
@@ -35,21 +39,20 @@ int main() {
     std::vector<float> image(detector.width() * detector.height(), 0.0f);
 
     // Loop over all pixels
-    for (int y = 0; y < detector.height(); ++y) {
-        for (int x = 0; x < detector.width(); ++x) {
+    for (int y = 0; y < resolution; ++y) {
+        for (int x = 0; x < resolution; ++x) {
             float pixelValue = 0.0f;
 
             // Loop over samples
             for (int index = 0; index < nSamples; ++index) {
                 auto start = std::chrono::high_resolution_clock::now();
-
                 // root domain (per pixel + sample)
                 OqmcPmjBnSampler baseSampler(x, y, 0, index, cache);
                 auto detectorSampler = baseSampler.split(ISampler::DomainKey::Detector);
 
                 const auto ray = detector.sampleRay(x, y, *detectorSampler);
 
-                // shape intersection
+                //  shape intersection
                 const auto rayOrigin = Point3f(
                     {ray.origin.x, ray.origin.y, ray.origin.z});  // FIXME: explicit conversion Vector3 to Point3
                 const auto intersection = prism.intersect(rayOrigin, ray.direction);
@@ -57,7 +60,6 @@ int main() {
                 if (!intersection.has_value()) {
                     break;
                 }
-
                 const auto intersection_point = intersection.value().point;
                 const auto intersection_normal = intersection.value().normal;
 
@@ -74,11 +76,12 @@ int main() {
                 }
 
                 if (ray.direction.z > 0.0f) {
-                    float rayIntensity = 0.0f;
-                    for (const Vector2f& sample : ray.spectrum.samples) {
-                        rayIntensity += sample.y;
-                    }
-                    pixelValue += rayIntensity;
+                    const float interferenceWeight = slitLight.interferenceWeight(
+                        {intersection_point.x, intersection_point.y, intersection_point.z},
+                        ray.direction,
+                        firstSpectrumSample.x
+                    );
+                    pixelValue += firstSpectrumSample.y * interferenceWeight;
                 }
 
                 auto end = std::chrono::high_resolution_clock::now();

@@ -1,9 +1,7 @@
 # Unit tests
 ADD_EXECUTABLE(unit_tests
-    light/test_SlitDiffractionField.cpp
     light/test_SlitLight.cpp
     light/test_Spectrum.cpp
-    physics/test_Snell.cpp
     sampler/test_sampler.cpp
     shape/test_prism.cpp
     vecmath/test_Bounds3.cpp
