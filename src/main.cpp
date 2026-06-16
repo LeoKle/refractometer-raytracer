@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 
+#include "detector/OpenApertureDetector.h"
 #include "detector/PinHoleDetector.h"
 #include "light/SlitLight.h"
 #include "light/Spectrum.h"
@@ -44,19 +45,18 @@ int main() {
     std::ofstream intersections2("intersections2.csv");
     intersections2 << "x,y,z\n";
 
-    int resolution = 64;
-    int nSamples = 12;
-
-    // Image buffer (grayscale)
-    std::vector<float> image(resolution * resolution, 0.0f);
+    int resolution_x = 640;
+    int resolution_y = 512;
+    int nSamples = 512;
 
     // Initialise the sampler cache
     auto cache = OqmcPmjBnSampler::createCache();
 
     SellmeierMedium prismMaterial = NBK7;
+
     Prism prism(Point3f(0.5f, -0.5f, 0.f), Point3f(1.5f, 1.f, 0.f), Point3f(2.5f, -0.5f, 0.f), 0.3f, prismMaterial);
-    SlitLight slitLight = SlitLight::from(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(0.0f, 0.05f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 0.5f), DebugSpectrum);
+    SlitLight slitLight = SlitLight::from(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(0.0f, 3.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 3.0f), HeNeSpectrum);
 
     const auto detectorOrigin = Vector3f(5.f, -0.5f, 0.15f);
     const auto detectorNormal = Vector3f(1.5f, -0.5f, 0.f).normalized();
@@ -68,11 +68,17 @@ int main() {
         detectorOrigin,       // origin
         detectorBottomRight,  // bottomRight
         detectorTopLeft,      // topLeft
-        detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f, resolution, resolution);
+        detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f, resolution_x, resolution_y);
+
+    // OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(slitLight.spectrum(), resolution_x,
+    // resolution_y);
+
+    // Image buffer (grayscale)
+    std::vector<float> image(detector.width() * detector.height(), 0.0f);
 
     // Loop over all pixels
-    for (int y = 0; y < resolution; ++y) {
-        for (int x = 0; x < resolution; ++x) {
+    for (int y = 0; y < resolution_x; ++y) {
+        for (int x = 0; x < resolution_y; ++x) {
             float pixelValue = 0.0f;
 
             // Loop over samples
@@ -84,29 +90,43 @@ int main() {
 
                 const auto detectorRay = detector.sampleRay(x, y, *detectorSampler);
 
-                const float wavelength = 550.f * 10e-3;  // micrometers // TODO: take wavelength from detector sample
+                // TODO: micrometers
 
-                // intersection 1: entry into prism (air -> glass)
-                const auto refractive_index = prismMaterial.refractiveIndex(wavelength);
-                const auto refracted1 =
-                    refractThroughSurface(prism, detectorRay, kRefractiveIndexAir,
-                                          refractive_index);  // TODO: correct refractive index calculation
-                if (!refracted1) continue;
+                for (const auto& sample : detectorRay.spectrum.samples) {
+                    // intersection 1: entry into prism (air -> glass)
+                    const auto refractive_index =
+                        prismMaterial.refractiveIndex(sample[0] * 1000);  // FIXME: micrometers conversion
+                    const auto refracted1 =
+                        refractThroughSurface(prism, detectorRay, kRefractiveIndexAir, refractive_index);
+                    if (!refracted1) continue;
 
-                // std::cout << "HIT";
+                    // intersection 2: exit from prism (glass -> air)
+                    const auto refracted2 =
+                        refractThroughSurface(prism, *refracted1, refractive_index, kRefractiveIndexAir);
+                    if (!refracted2) continue;
 
-                // intersection 2: exit from prism (glass -> air)
-                const auto refracted2 =
-                    refractThroughSurface(prism, *refracted1, refractive_index,
-                                          kRefractiveIndexAir);  // TODO: correct refractive index calculation
-                if (!refracted2) continue;
+                    const auto& p1 = refracted1->origin;
+                    intersections1 << p1.x << "," << p1.y << "," << p1.z << "\n";
+                    const auto& p2 = refracted2->origin;
+                    intersections2 << p2.x << "," << p2.y << "," << p2.z << "\n";
 
-                // TODO: check for intersection with lightsource
+                    const auto intersection_point =
+                        Point3f({refracted2->origin.x, refracted2->origin.y, refracted2->origin.z});
 
-                const auto& p1 = refracted1->origin;
-                intersections1 << p1.x << "," << p1.y << "," << p1.z << "\n";
-                const auto& p2 = refracted2->origin;
-                intersections2 << p2.x << "," << p2.y << "," << p2.z << "\n";
+                    // std::cout << "Ray:\n";
+                    // std::cout << p2.x << "," << p2.y << "," << p2.z << "\n";
+                    // std::cout << refracted2->direction.x << "," << refracted2->direction.y << ","
+                    //           << refracted2->direction.z << "\n\n";
+
+                    // check for intersection with lightsource
+                    const auto lightIntersection =
+                        slitLight.intersect(intersection_point, refracted2->direction, sample[0]);
+
+                    if (lightIntersection) {
+                        pixelValue += sample[1] * lightIntersection->interferenceWeight;
+                        // std::cout << "HIT";
+                    }
+                }
 
                 auto end = std::chrono::high_resolution_clock::now();
                 auto total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
@@ -119,6 +139,10 @@ int main() {
     }
 
     std::cout << "Rendering complete.\n";
+
+    std::ofstream imageFile("image.bin", std::ios::binary);
+    imageFile.write(reinterpret_cast<const char*>(image.data()), image.size() * sizeof(float));
+    imageFile.close();
 
     return 0;
 }

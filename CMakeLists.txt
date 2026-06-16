@@ -16,8 +16,9 @@ add_subdirectory(external)
 
 set(RAYTRACER_SOURCES
     src/light/SlitLight.cpp
-    src/light/SlitDiffractionField.cpp
     src/detector/PinHoleDetector.cpp
+    src/detector/OpenApertureDetector.cpp
+    src/detector/DetectorQE.cpp
 )
 
 set(RAYTRACER_HEADERS
@@ -35,11 +36,13 @@ set(RAYTRACER_HEADERS
 
     src/light/ILightSource.h
     src/light/SlitLight.h
-    src/light/SlitDiffractionField.h
     src/light/Spectrum.h
 
     src/detector/IDetector.h
     src/detector/PinHoleDetector.h
+    src/detector/OpenApertureDetector.h
+    src/detector/DetectorQE.h
+    src/detector/DetectorQEData.h
 )
 
 add_library(${PROJECT_NAME}_lib STATIC

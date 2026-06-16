@@ -23,3 +23,9 @@ inline const Spectrum DebugSpectrum{
             {680.0f, 0.48f}
         }
 };
+
+inline const Spectrum HeNeSpectrum{
+    {
+        {632.8f, 1.0f}
+    }
+};
