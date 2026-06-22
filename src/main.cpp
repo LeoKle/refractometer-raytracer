@@ -32,7 +32,7 @@ inline std::optional<Ray> refractThroughSurface(const IShape& shape, const Ray& 
     // FIXME: explicit conversion Point3 to Vector3 needed
     const auto point = Vector3f({hit->point.x, hit->point.y, hit->point.z});
 
-    return Ray{point, refracted.value()};
+    return Ray{point, refracted.value(), incoming.spectrum};
 }
 
 constexpr float kRefractiveIndexAir = 1.000277f;
