@@ -98,7 +98,7 @@ int main() {
 
                     // intersection 1: entry into prism (air -> glass)
                     const auto refractive_index =
-                        prismMaterial.refractiveIndex(wavelengthNm * 1000);  // FIXME: micrometers conversion
+                        prismMaterial.refractiveIndex(wavelengthNm * 0.001);  // FIXME: micrometers conversion
                     const auto refracted1 =
                         refractThroughSurface(prism, detectorRay, kRefractiveIndexAir, refractive_index);
                     if (!refracted1) continue;
