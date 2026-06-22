@@ -89,8 +89,8 @@ Spectrum DropZeroSamples(const Spectrum& spectrum) {
     Spectrum result;
     result.samples.reserve(spectrum.samples.size());
 
-    for (const Vector2f& sample : spectrum.samples) {
-        if (sample.y > 0.0f) {
+    for (const SpectralSample& sample : spectrum.samples) {
+        if (sample.intensity > 0.0f) {
             result.samples.push_back(sample);
         }
     }
@@ -107,28 +107,46 @@ float EvaluateSpectrum(
     }
 
     if (spectrum.samples.size() == 1) {
-        return std::max(0.0f, spectrum.samples.front().y);
+        return std::max(0.0f, spectrum.samples.front().intensity);
     }
 
-    // Find first sample where sample.x >= wavelengthNm
-    auto it = std::lower_bound(spectrum.samples.begin(), spectrum.samples.end(), wavelengthNm, 
-        [](const Vector2f& s, float val) { return s.x < val; });
+    // Find first sample where sample.wavelengthNm >= wavelengthNm
+    auto it = std::lower_bound(spectrum.samples.begin(), spectrum.samples.end(), wavelengthNm,
+        [](const SpectralSample& s, float val) { return s.wavelengthNm < val; });
 
     if (it == spectrum.samples.begin()) {
         const auto& s0 = spectrum.samples[0];
         const auto& s1 = spectrum.samples[1];
-        return std::max(0.0f, LinearBetween(s0.x, s0.y, s1.x, s1.y, wavelengthNm));
+        return std::max(0.0f, LinearBetween(
+            s0.wavelengthNm,
+            s0.intensity,
+            s1.wavelengthNm,
+            s1.intensity,
+            wavelengthNm
+        ));
     }
 
     if (it == spectrum.samples.end()) {
         size_t n = spectrum.samples.size();
         const auto& sn2 = spectrum.samples[n - 2];
         const auto& sn1 = spectrum.samples[n - 1];
-        return std::max(0.0f, LinearBetween(sn2.x, sn2.y, sn1.x, sn1.y, wavelengthNm));
+        return std::max(0.0f, LinearBetween(
+            sn2.wavelengthNm,
+            sn2.intensity,
+            sn1.wavelengthNm,
+            sn1.intensity,
+            wavelengthNm
+        ));
     }
 
     auto it_prev = std::prev(it);
-    return std::max(0.0f, LinearBetween(it_prev->x, it_prev->y, it->x, it->y, wavelengthNm));
+    return std::max(0.0f, LinearBetween(
+        it_prev->wavelengthNm,
+        it_prev->intensity,
+        it->wavelengthNm,
+        it->intensity,
+        wavelengthNm
+    ));
 }
 
 Spectrum MultiplySourceSpectrumByDetectorQE(
@@ -142,14 +160,14 @@ Spectrum MultiplySourceSpectrumByDetectorQE(
     }
 
     if (source.samples.size() == 1) {
-        const Vector2f& s = source.samples.front();
-        const float weighted = s.y * GetDetectorQE(s.x);
+        const SpectralSample& s = source.samples.front();
+        const float weighted = s.intensity * GetDetectorQE(s.wavelengthNm);
 
         if (weighted <= 0.0f) {
             return {};
         }
 
-        return Spectrum{{{s.x, weighted}}};
+        return Spectrum{{{s.wavelengthNm, weighted}}};
     }
 
     const bool useSourceAxis =
@@ -160,18 +178,18 @@ Spectrum MultiplySourceSpectrumByDetectorQE(
     Spectrum result;
     result.samples.reserve(axisSpectrum.samples.size());
 
-    for (const Vector2f& axisSample : axisSpectrum.samples) {
-        const float wavelengthNm = axisSample.x;
+    for (const SpectralSample& axisSample : axisSpectrum.samples) {
+        const float wavelengthNm = axisSample.wavelengthNm;
 
         const float sourceValue =
             useSourceAxis
-                ? axisSample.y
+                ? axisSample.intensity
                 : EvaluateSpectrum(source, wavelengthNm);
 
         const float qeValue =
             useSourceAxis
                 ? GetDetectorQE(wavelengthNm)
-                : axisSample.y;
+                : axisSample.intensity;
 
         const float weighted = sourceValue * qeValue;
 

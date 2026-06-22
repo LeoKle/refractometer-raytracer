@@ -77,8 +77,8 @@ int main() {
     std::vector<float> image(detector.width() * detector.height(), 0.0f);
 
     // Loop over all pixels
-    for (int y = 0; y < resolution_x; ++y) {
-        for (int x = 0; x < resolution_y; ++x) {
+    for (int y = 0; y < detector.height(); ++y) {
+        for (int x = 0; x < detector.width(); ++x) {
             float pixelValue = 0.0f;
 
             // Loop over samples
@@ -92,10 +92,13 @@ int main() {
 
                 // TODO: micrometers
 
-                for (const auto& sample : detectorRay.spectrum.samples) {
+                for (const SpectralSample& sample : detectorRay.spectrum.samples) {
+                    const float wavelengthNm = sample.wavelengthNm;
+                    const float intensity = sample.intensity;
+
                     // intersection 1: entry into prism (air -> glass)
                     const auto refractive_index =
-                        prismMaterial.refractiveIndex(sample[0] * 1000);  // FIXME: micrometers conversion
+                        prismMaterial.refractiveIndex(wavelengthNm * 1000);  // FIXME: micrometers conversion
                     const auto refracted1 =
                         refractThroughSurface(prism, detectorRay, kRefractiveIndexAir, refractive_index);
                     if (!refracted1) continue;
@@ -120,10 +123,10 @@ int main() {
 
                     // check for intersection with lightsource
                     const auto lightIntersection =
-                        slitLight.intersect(intersection_point, refracted2->direction, sample[0]);
+                        slitLight.intersect(intersection_point, refracted2->direction, wavelengthNm);
 
                     if (lightIntersection) {
-                        pixelValue += sample[1] * lightIntersection->interferenceWeight;
+                        pixelValue += intensity * lightIntersection->interferenceWeight;
                         // std::cout << "HIT";
                     }
                 }

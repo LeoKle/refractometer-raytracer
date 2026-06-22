@@ -72,14 +72,14 @@ TEST(SlitLight, SpectrumIsStoredUnchanged) {
 
     ASSERT_EQ(stored.samples.size(), 3);
 
-    EXPECT_NEAR(stored.samples[0].x, 450.0f, kEps);
-    EXPECT_NEAR(stored.samples[0].y, 0.25f,  kEps);
+    EXPECT_NEAR(stored.samples[0].wavelengthNm, 450.0f, kEps);
+    EXPECT_NEAR(stored.samples[0].intensity, 0.25f,  kEps);
 
-    EXPECT_NEAR(stored.samples[1].x, 550.0f, kEps);
-    EXPECT_NEAR(stored.samples[1].y, 0.80f,  kEps);
+    EXPECT_NEAR(stored.samples[1].wavelengthNm, 550.0f, kEps);
+    EXPECT_NEAR(stored.samples[1].intensity, 0.80f,  kEps);
 
-    EXPECT_NEAR(stored.samples[2].x, 650.0f, kEps);
-    EXPECT_NEAR(stored.samples[2].y, 0.40f,  kEps);
+    EXPECT_NEAR(stored.samples[2].wavelengthNm, 650.0f, kEps);
+    EXPECT_NEAR(stored.samples[2].intensity, 0.40f,  kEps);
 }
 
 TEST(SlitLight, SpectrumReturnsSameReferenceOnRepeatedCalls) {
@@ -103,8 +103,6 @@ TEST(SlitLight, SamplePointStaysInsideAxisAlignedRectangle) {
         {1.0f, 8.0f, 3.0f},
         DebugSpectrum
     );
-    CyclingSampler sampler;
-
     auto cache = OqmcPmjBnSampler::createCache();
     OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
 
@@ -128,8 +126,6 @@ TEST(SlitLight, SamplePointOnDegenerateWidthSlitKeepsXFixed) {
         {2.0f, 6.0f, 0.0f},
         DebugSpectrum
     );
-    CyclingSampler sampler;
-
     auto cache = OqmcPmjBnSampler::createCache();
     OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
 
@@ -150,8 +146,6 @@ TEST(SlitLight, SamplePointOnDegenerateHeightSlitKeepsYFixed) {
         {3.0f, 4.0f, 1.0f},
         DebugSpectrum
     );
-    CyclingSampler sampler;
-
     auto cache = OqmcPmjBnSampler::createCache();
     OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
 
@@ -174,8 +168,6 @@ TEST(SlitLight, CanBeUsedThroughLightSourceInterface) {
     );
 
     ILightSource* light = &slitLight;
-    CyclingSampler sampler;
-
     auto cache = OqmcPmjBnSampler::createCache();
     OqmcPmjBnSampler sampler(0, 0, 0, 0, cache);
 

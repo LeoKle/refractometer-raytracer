@@ -1,12 +1,14 @@
 #pragma once
 
-#include "../vecmath/Vector2.h"
 #include <vector>
 
-/// samples[i].x = wavelength in nm
-/// samples[i].y = spectral irradiance in W/(m^2*nm)
+struct SpectralSample {
+    float wavelengthNm;
+    float intensity;
+};
+
 struct Spectrum {
-    std::vector<Vector2f> samples;
+    std::vector<SpectralSample> samples;
 };
 
 inline const Spectrum DebugSpectrum{

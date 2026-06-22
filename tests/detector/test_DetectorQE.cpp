@@ -69,23 +69,23 @@ TEST(DetectorQETest, DropZeroSamplesRemovesZeros) {
     
     Spectrum dropped = DropZeroSamples(s);
     ASSERT_EQ(dropped.samples.size(), 2);
-    EXPECT_FLOAT_EQ(dropped.samples[0].x, 500.0f);
-    EXPECT_FLOAT_EQ(dropped.samples[0].y, 1.0f);
-    EXPECT_FLOAT_EQ(dropped.samples[1].x, 700.0f);
-    EXPECT_FLOAT_EQ(dropped.samples[1].y, 0.5f);
+    EXPECT_FLOAT_EQ(dropped.samples[0].wavelengthNm, 500.0f);
+    EXPECT_FLOAT_EQ(dropped.samples[0].intensity, 1.0f);
+    EXPECT_FLOAT_EQ(dropped.samples[1].wavelengthNm, 700.0f);
+    EXPECT_FLOAT_EQ(dropped.samples[1].intensity, 0.5f);
 }
 
 TEST(DetectorQETest, HeNeSpectrumHasOneSample) {
     EXPECT_EQ(HeNeSpectrum.samples.size(), 1);
-    EXPECT_FLOAT_EQ(HeNeSpectrum.samples[0].x, 632.8f);
-    EXPECT_FLOAT_EQ(HeNeSpectrum.samples[0].y, 1.0f);
+    EXPECT_FLOAT_EQ(HeNeSpectrum.samples[0].wavelengthNm, 632.8f);
+    EXPECT_FLOAT_EQ(HeNeSpectrum.samples[0].intensity, 1.0f);
 }
 
 TEST(DetectorQETest, WeightedHeNeSpectrumHasOneSample) {
     Spectrum weighted = MultiplySourceSpectrumByDetectorQE(HeNeSpectrum);
     ASSERT_EQ(weighted.samples.size(), 1);
-    EXPECT_FLOAT_EQ(weighted.samples[0].x, 632.8f);
-    EXPECT_NEAR(weighted.samples[0].y, GetDetectorQE(632.8f), 1e-6f);
+    EXPECT_FLOAT_EQ(weighted.samples[0].wavelengthNm, 632.8f);
+    EXPECT_NEAR(weighted.samples[0].intensity, GetDetectorQE(632.8f), 1e-6f);
 }
 
 TEST(DetectorQETest, OpenApertureDetectorRayCarriesSpectrum) {
@@ -98,6 +98,6 @@ TEST(DetectorQETest, OpenApertureDetectorRayCarriesSpectrum) {
     
     Ray ray = detector.sampleRay(5, 5, sampler);
     ASSERT_EQ(ray.spectrum.samples.size(), 1);
-    EXPECT_FLOAT_EQ(ray.spectrum.samples[0].x, 632.8f);
-    EXPECT_NEAR(ray.spectrum.samples[0].y, GetDetectorQE(632.8f), 1e-6f);
+    EXPECT_FLOAT_EQ(ray.spectrum.samples[0].wavelengthNm, 632.8f);
+    EXPECT_NEAR(ray.spectrum.samples[0].intensity, GetDetectorQE(632.8f), 1e-6f);
 }
