@@ -152,6 +152,11 @@ int main() {
         }
     }
 
+    const float maxVal = *std::max_element(image.begin(), image.end());
+    if (maxVal > 0.f) {
+        for (float& v : image) v /= maxVal;
+    }
+
     std::cout << "Rendering complete.\n";
 
     std::ofstream imageFile("image.bin", std::ios::binary);
