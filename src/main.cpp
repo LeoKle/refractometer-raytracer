@@ -1,6 +1,6 @@
-#include <chrono>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <vector>
 
 #include "detector/OpenApertureDetector.h"
@@ -47,7 +47,7 @@ int main() {
 
     int resolution_x = 640;
     int resolution_y = 512;
-    int nSamples = 512;
+    int nSamples = 1024;
 
     // Initialise the sampler cache
     auto cache = OqmcPmjBnSampler::createCache();
@@ -63,15 +63,33 @@ int main() {
     const auto detectorBottomRight = Vector3f(4.5f, -1.5f, 0.15f);
     const auto detectorTopLeft = detectorOrigin + Vector3f(0.f, 0.f, 0.15f);
     const auto focalLength = 0.15f;
+    const auto pinhole =
+        detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f;
 
-    PinHoleDetector detector = PinHoleDetector::from(
-        detectorOrigin,       // origin
-        detectorBottomRight,  // bottomRight
-        detectorTopLeft,      // topLeft
-        detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f, resolution_x, resolution_y);
+    const auto focusTarget = Vector3f(1.5f, 0.0f, 0.15f);
+    const float focusDistance = (focusTarget - pinhole).length();
+    const float apertureRadius = 0.0127f;
 
-    // OpenApertureDetector detector = OpenApertureDetector::go5000Mpmcl(slitLight.spectrum(), resolution_x,
-    // resolution_y);
+    // PinHoleDetector detector = PinHoleDetector::from(
+    //     detectorOrigin,
+    //     detectorBottomRight,
+    //     detectorTopLeft,
+    //     pinhole,
+    //     resolution_x,
+    //     resolution_y
+    // );
+
+    OpenApertureDetector detector = OpenApertureDetector::focused(
+        slitLight.spectrum(),
+        detectorOrigin,
+        detectorBottomRight,
+        detectorTopLeft,
+        pinhole,
+        apertureRadius,
+        focusDistance,
+        resolution_x,
+        resolution_y
+    );
 
     // Image buffer (grayscale)
     std::vector<float> image(detector.width() * detector.height(), 0.0f);
@@ -83,14 +101,11 @@ int main() {
 
             // Loop over samples
             for (int index = 0; index < nSamples; ++index) {
-                auto start = std::chrono::high_resolution_clock::now();
                 // root domain (per pixel + sample)
                 OqmcPmjBnSampler baseSampler(x, y, 0, index, cache);
                 auto detectorSampler = baseSampler.split(ISampler::DomainKey::Detector);
 
                 const auto detectorRay = detector.sampleRay(x, y, *detectorSampler);
-
-                // TODO: micrometers
 
                 for (const SpectralSample& sample : detectorRay.spectrum.samples) {
                     const float wavelengthNm = sample.wavelengthNm;
@@ -130,10 +145,6 @@ int main() {
                         // std::cout << "HIT";
                     }
                 }
-
-                auto end = std::chrono::high_resolution_clock::now();
-                auto total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-                // std::cout << "time per sample: " << total_ns << " ns" << "\n";
             }
 
             // normalize

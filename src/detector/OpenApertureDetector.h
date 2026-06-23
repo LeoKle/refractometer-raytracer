@@ -4,20 +4,37 @@
 #include "IDetector.h"
 #include "../light/Spectrum.h"
 
-/// Bare sensor behind a circular front opening.
+/// Scene-placed sensor behind a focused circular front opening.
 ///
 /// This models:
 ///
 ///     sensor pixel  ->  circular opening  ->  scene
 ///
-/// Rays that would hit the metal cylinder/front mask are not generated.
-/// Equivalently, we sample only the rays that survive the aperture test.
-///
-/// Units: millimeters.
+/// The focused factory uses world-space units. go5000Mpmcl is legacy local
+/// device geometry in millimeters and is not suitable for scene placement.
 class OpenApertureDetector : public IDetector {
 public:
     static constexpr int NativeWidth  = 2560;
     static constexpr int NativeHeight = 2048;
+
+    struct OpenApertureDebugSample {
+        Vector3f sensorPoint;
+        Vector3f aperturePoint;
+        Vector3f focusPoint;
+        Ray ray;
+    };
+
+    static OpenApertureDetector focused(
+        const Spectrum& sourceSpectrum,
+        Vector3f sensorOrigin,
+        Vector3f sensorBottomRight,
+        Vector3f sensorTopLeft,
+        Vector3f apertureCenter,
+        float apertureRadius,
+        float focusDistance,
+        int width,
+        int height
+    );
 
     static OpenApertureDetector go5000Mpmcl(
         const Spectrum& sourceSpectrum,
@@ -26,6 +43,7 @@ public:
     );
 
     Ray sampleRay(int x, int y, ISampler& sampler) const override;
+    OpenApertureDebugSample sampleDebugRay(int x, int y, ISampler& sampler) const;
 
     [[nodiscard]] int width() const override;
     [[nodiscard]] int height() const override;
@@ -33,6 +51,12 @@ public:
 private:
     OpenApertureDetector(
         const Spectrum& sourceSpectrum,
+        Vector3f sensorOrigin,
+        Vector3f sensorEdgeU,
+        Vector3f sensorEdgeV,
+        Vector3f apertureCenter,
+        float apertureRadius,
+        float focusDistance,
         int width,
         int height
     );
@@ -47,6 +71,15 @@ private:
         ISampler& sampler
     ) const;
 
+    [[nodiscard]] Vector3f focusPointFor(
+        const Vector3f& sensorPoint
+    ) const;
+
+    [[nodiscard]] Ray makeRay(
+        const Vector3f& aperturePoint,
+        const Vector3f& focusPoint
+    ) const;
+
     static constexpr float SensorWidthMm    = 12.8f;
     static constexpr float SensorHeightMm   = 10.24f;
     static constexpr float SensorDistanceMm = 17.526f;
@@ -54,7 +87,7 @@ private:
     // Nominal C-mount radius: 25.4 mm diameter / 2.
     static constexpr float ApertureRadiusMm = 12.7f;
 
-    static constexpr float RayOriginEpsilonMm = 1.0e-4f;
+    static constexpr float RayOriginEpsilon = 1.0e-5f;
     static constexpr float Pi = 3.14159265358979323846f;
 
     Spectrum m_launchSpectrum;
@@ -66,6 +99,10 @@ private:
     Vector3f m_apertureCenter;
     Vector3f m_apertureU;
     Vector3f m_apertureV;
+    float m_apertureRadius;
+
+    Vector3f m_viewDirection;
+    float m_focusDistance;
 
     int m_width;
     int m_height;
