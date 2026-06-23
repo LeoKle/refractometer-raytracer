@@ -55,16 +55,15 @@ int main() {
     SellmeierMedium prismMaterial = NBK7;
 
     Prism prism(Point3f(0.5f, -0.5f, 0.f), Point3f(1.5f, 1.f, 0.f), Point3f(2.5f, -0.5f, 0.f), 0.3f, prismMaterial);
-    SlitLight slitLight = SlitLight::from(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(0.0f, 3.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 3.0f), HeNeSpectrum);
+    SlitLight slitLight =
+        SlitLight::from(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(0.0f, 3.0f, 0.0f), Vector3f(0.0f, 0.0f, 3.0f), Le_uw_E3B);
 
     const auto detectorOrigin = Vector3f(5.f, -0.5f, 0.15f);
     const auto detectorNormal = Vector3f(1.5f, -0.5f, 0.f).normalized();
     const auto detectorBottomRight = Vector3f(4.5f, -1.5f, 0.15f);
     const auto detectorTopLeft = detectorOrigin + Vector3f(0.f, 0.f, 0.15f);
     const auto focalLength = 0.15f;
-    const auto pinhole =
-        detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f;
+    const auto pinhole = detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f;
 
     const auto focusTarget = Vector3f(1.5f, 0.0f, 0.15f);
     const float focusDistance = (focusTarget - pinhole).length();
@@ -79,17 +78,9 @@ int main() {
     //     resolution_y
     // );
 
-    OpenApertureDetector detector = OpenApertureDetector::focused(
-        slitLight.spectrum(),
-        detectorOrigin,
-        detectorBottomRight,
-        detectorTopLeft,
-        pinhole,
-        apertureRadius,
-        focusDistance,
-        resolution_x,
-        resolution_y
-    );
+    OpenApertureDetector detector =
+        OpenApertureDetector::focused(slitLight.spectrum(), detectorOrigin, detectorBottomRight, detectorTopLeft,
+                                      pinhole, apertureRadius, focusDistance, resolution_x, resolution_y);
 
     // Image buffer (grayscale)
     std::vector<float> image(detector.width() * detector.height(), 0.0f);
@@ -148,7 +139,7 @@ int main() {
             }
 
             // normalize
-            image[y * detector.width() + x] = pixelValue / nSamples;
+            image[y * detector.width() + x] = pixelValue / static_cast<float>(nSamples);
         }
     }
 
