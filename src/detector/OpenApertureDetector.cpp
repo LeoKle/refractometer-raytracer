@@ -100,7 +100,8 @@ OpenApertureDetector::OpenApertureDetector(
     int width,
     int height
 )
-    : m_launchSpectrum{
+    : m_sensor{width, height}
+    , m_launchSpectrum{
           MultiplySourceSpectrumByDetectorQE(sourceSpectrum)
       }
     , m_sensorOrigin{sensorOrigin}
@@ -112,15 +113,7 @@ OpenApertureDetector::OpenApertureDetector(
     , m_apertureRadius{apertureRadius}
     , m_viewDirection{}
     , m_focusDistance{focusDistance}
-    , m_width{width}
-    , m_height{height}
 {
-    if (width <= 0) {
-        throw std::invalid_argument("OpenApertureDetector width must be positive");
-    }
-    if (height <= 0) {
-        throw std::invalid_argument("OpenApertureDetector height must be positive");
-    }
     if (!std::isfinite(apertureRadius) || apertureRadius < 0.0f) {
         throw std::invalid_argument("OpenApertureDetector aperture radius must be non-negative");
     }
@@ -163,10 +156,10 @@ Vector3f OpenApertureDetector::sampleSensorPoint(
     const auto sample = sampler.next2D();
 
     const float u =
-        (static_cast<float>(x) + sample[0]) / static_cast<float>(m_width);
+        (static_cast<float>(x) + sample[0]) / static_cast<float>(m_sensor.width());
 
     const float v =
-        (static_cast<float>(y) + sample[1]) / static_cast<float>(m_height);
+        (static_cast<float>(y) + sample[1]) / static_cast<float>(m_sensor.height());
 
     return m_sensorOrigin + u * m_sensorEdgeU + v * m_sensorEdgeV;
 }
@@ -239,10 +232,18 @@ Ray OpenApertureDetector::sampleRay(
     return sampleDebugRay(x, y, sampler).ray;
 }
 
+Sensor& OpenApertureDetector::sensor() {
+    return m_sensor;
+}
+
+const Sensor& OpenApertureDetector::sensor() const {
+    return m_sensor;
+}
+
 int OpenApertureDetector::width() const {
-    return m_width;
+    return m_sensor.width();
 }
 
 int OpenApertureDetector::height() const {
-    return m_height;
+    return m_sensor.height();
 }

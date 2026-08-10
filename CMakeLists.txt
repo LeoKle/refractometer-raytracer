@@ -39,6 +39,7 @@ set(RAYTRACER_HEADERS
     src/light/Spectrum.h
 
     src/detector/IDetector.h
+    src/detector/Sensor.h
     src/detector/PinHoleDetector.h
     src/detector/OpenApertureDetector.h
     src/detector/DetectorQE.h
