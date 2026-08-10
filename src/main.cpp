@@ -88,10 +88,10 @@ int main() {
     // Loop over all pixels
     for (int y = 0; y < detector.height(); ++y) {
         for (int x = 0; x < detector.width(); ++x) {
-            float pixelValue = 0.0f;
-
             // Loop over samples
             for (int index = 0; index < nSamples; ++index) {
+                float sampleValue = 0.0f;
+
                 // root domain (per pixel + sample)
                 OqmcPmjBnSampler baseSampler(x, y, 0, index, cache);
                 auto detectorSampler = baseSampler.split(ISampler::DomainKey::Detector);
@@ -132,14 +132,15 @@ int main() {
                         slitLight.intersect(intersection_point, refracted2->direction, wavelengthNm);
 
                     if (lightIntersection) {
-                        pixelValue += intensity * lightIntersection->interferenceWeight;
+                        sampleValue += intensity * lightIntersection->interferenceWeight;
                         // std::cout << "HIT";
                     }
                 }
+
+                detector.sensor().addSample(x, y, sampleValue);
             }
 
-            // normalize
-            image[y * detector.width() + x] = pixelValue / static_cast<float>(nSamples);
+            image[y * detector.width() + x] = detector.sensor().pixelValue(x, y);
         }
     }
 
