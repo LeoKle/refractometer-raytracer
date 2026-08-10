@@ -63,7 +63,7 @@ int main() {
     const auto detectorBottomRight = Vector3f(4.5f, -1.5f, 0.15f);
     const auto detectorTopLeft = detectorOrigin + Vector3f(0.f, 0.f, 0.15f);
     const auto focalLength = 0.15f;
-    const auto pinhole = detectorOrigin + detectorNormal * focalLength + detectorBottomRight * 0.5f;
+    const auto pinhole = 0.5f * (detectorBottomRight + detectorTopLeft) + detectorNormal * focalLength;
 
     const auto focusTarget = Vector3f(1.5f, 0.0f, 0.15f);
     const float focusDistance = (focusTarget - pinhole).length();
