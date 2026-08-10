@@ -12,6 +12,7 @@ ADD_EXECUTABLE(unit_tests
     vecmath/test_Vector3.cpp
     detector/test_DetectorQE.cpp
     detector/test_OpenApertureDetector.cpp
+    detector/test_Sensor.cpp
     test_main.cpp
 )
 TARGET_LINK_LIBRARIES(unit_tests PRIVATE
