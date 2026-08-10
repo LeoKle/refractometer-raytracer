@@ -15,6 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(external)
 
 set(RAYTRACER_SOURCES
+    src/render/Render.cpp
     src/light/SlitLight.cpp
     src/detector/PinHoleDetector.cpp
     src/detector/OpenApertureDetector.cpp
@@ -22,6 +23,8 @@ set(RAYTRACER_SOURCES
 )
 
 set(RAYTRACER_HEADERS
+    src/render/Render.h
+
     src/sampler/ISampler.h
     src/sampler/Sampler.h
 
