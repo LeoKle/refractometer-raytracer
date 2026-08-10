@@ -63,24 +63,24 @@ int main() {
     const auto detectorBottomRight = Vector3f(4.5f, -1.5f, 0.15f);
     const auto detectorTopLeft = detectorOrigin + Vector3f(0.f, 0.f, 0.15f);
     const auto focalLength = 0.15f;
-    const auto pinhole = 0.5f * (detectorBottomRight + detectorTopLeft) + detectorNormal * focalLength;
+    const auto apertureCenter = 0.5f * (detectorBottomRight + detectorTopLeft) + detectorNormal * focalLength;
 
     const auto focusTarget = Vector3f(1.5f, 0.0f, 0.15f);
-    const float focusDistance = (focusTarget - pinhole).length();
+    const float focusDistance = (focusTarget - apertureCenter).length();
     const float apertureRadius = 0.0127f;
 
     // PinHoleDetector detector = PinHoleDetector::from(
     //     detectorOrigin,
     //     detectorBottomRight,
     //     detectorTopLeft,
-    //     pinhole,
+    //     apertureCenter,
     //     resolution_x,
     //     resolution_y
     // );
 
     OpenApertureDetector detector =
         OpenApertureDetector::focused(slitLight.spectrum(), detectorOrigin, detectorBottomRight, detectorTopLeft,
-                                      pinhole, apertureRadius, focusDistance, resolution_x, resolution_y);
+                                      apertureCenter, apertureRadius, focusDistance, resolution_x, resolution_y);
 
     // Image buffer (grayscale)
     std::vector<float> image(detector.width() * detector.height(), 0.0f);
