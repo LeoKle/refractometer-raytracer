@@ -2,6 +2,7 @@
 #define DETECTOR_OPENAPERTUREDETECTOR_H
 
 #include "IDetector.h"
+#include "Sensor.h"
 #include "../light/Spectrum.h"
 
 /// Scene-placed sensor behind a focused circular front opening.
@@ -45,6 +46,8 @@ public:
     Ray sampleRay(int x, int y, ISampler& sampler) const override;
     OpenApertureDebugSample sampleDebugRay(int x, int y, ISampler& sampler) const;
 
+    [[nodiscard]] Sensor& sensor();
+    [[nodiscard]] const Sensor& sensor() const;
     [[nodiscard]] int width() const override;
     [[nodiscard]] int height() const override;
 
@@ -90,6 +93,7 @@ private:
     static constexpr float RayOriginEpsilon = 1.0e-5f;
     static constexpr float Pi = 3.14159265358979323846f;
 
+    Sensor m_sensor;
     Spectrum m_launchSpectrum;
 
     Vector3f m_sensorOrigin;
@@ -103,9 +107,6 @@ private:
 
     Vector3f m_viewDirection;
     float m_focusDistance;
-
-    int m_width;
-    int m_height;
 };
 
 #endif

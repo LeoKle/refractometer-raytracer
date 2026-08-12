@@ -79,6 +79,13 @@ void expectNearVector(const Vector3f& a, const Vector3f& b, float eps) {
 
 } // namespace
 
+TEST(OpenApertureDetectorTest, OwnsSensorAtDetectorResolution) {
+    const auto detector = makeDetector();
+
+    EXPECT_EQ(detector.sensor().width(), detector.width());
+    EXPECT_EQ(detector.sensor().height(), detector.height());
+}
+
 TEST(OpenApertureDetectorTest, SensorPointStaysInsidePixelFootprint) {
     const auto detector = makeDetector();
 
